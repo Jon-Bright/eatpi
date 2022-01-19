@@ -276,8 +276,45 @@ test8:
 	bcc test9
 	jmp err64
 
-	;; Our work here is done
+	;; Test 9, multiply num2 and num1, compare
+	;; This _should_ be exactly the same result as test 8.
 test9:
+	lda #'9'
+	jsr lcd_char_out
+
+	lda #(num2 & $ff)
+	sta $00
+	lda #(num2 >> 8)
+	sta $01
+
+	lda #(num1 & $ff)
+	sta $02
+	lda #(num1 >> 8)
+	sta $03
+
+	lda #(RES & $ff)
+	sta $04
+	lda #(RES >> 8)
+	sta $05
+
+	jsr mul_64
+
+	lda #(res_1_2_mul & $ff)
+	sta $00
+	lda #(res_1_2_mul >> 8)
+	sta $01
+
+	lda #(RES & $ff)
+	sta $02
+	lda #(RES >> 8)
+	sta $03
+
+	jsr cmp_64
+	bcc testA
+	jmp err64
+
+	;; Our work here is done
+testA:
 	lda #(msg_ok & $ff)
 	sta $20
 	lda #(msg_ok >> 8)
