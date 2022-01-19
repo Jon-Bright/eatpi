@@ -61,12 +61,16 @@ mul_64next:
 	rol			; Move test bit one bit up
 	bne mul_64l		; We didn't move it out of the byte, proceed
 	inx			; Finished bits of that byte, go to next byte
-	cpx 8			; Did 8 bytes?
+	cpx #8			; Did 8 bytes?
 	beq mul_64done		; If yes, we're done
 	lda #1			; Otherwise, start next byte at bit 0 again
+	bra mul_64l
 
 mul_64done:
-	;; We don't need to copy anything around - the most recent add will have ended up in result
+	;; We need to copy from our intermediate (B) to result (which may have been overwritten by a
+	;; shift since the last add)
+	jsr cpy_br_64
+	
 	ply
 	plx
 	pla
@@ -99,6 +103,22 @@ cpy_rbl:
 	sta (B),y
 	dey
 	bpl cpy_rbl
+
+	ply
+	pla
+	rts
+
+cpy_br_64:
+	;; Copy B to result
+	pha
+	phy
+
+	ldy #7
+cpy_brl:
+	lda (B),y
+	sta (R),y
+	dey
+	bpl cpy_brl
 
 	ply
 	pla
