@@ -131,10 +131,10 @@ cpy_at0_64:
 	phy
 
 	ldy #7
-	ldx #TEMP0
+	ldx #7
 cpy_at0l:
 	lda (A),y
-	sta $07,x
+	sta TEMP0,x
 	dex
 	dey
 	bpl cpy_at0l
@@ -151,10 +151,10 @@ cpy_bt1_64:
 	phy
 
 	ldy #7
-	ldx #TEMP1
+	ldx #7
 cpy_bt1l:
 	lda (B),y
-	sta $07,x
+	sta TEMP1,x
 	dex
 	dey
 	bpl cpy_bt1l
