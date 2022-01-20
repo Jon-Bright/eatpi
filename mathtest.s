@@ -7,6 +7,44 @@ reset:
 
 	jsr lcd_init
 
+	;; Test 0 (TODO), multiply (now 32-bit!) num6 and num7, compare
+test0:
+	lda #'0'
+	jsr lcd_char_out
+	
+	lda #(num6 & $ff)
+	sta $00
+	lda #(num6 >> 8)
+	sta $01
+
+	lda #(num7 & $ff)
+	sta $02
+	lda #(num7 >> 8)
+	sta $03
+
+	lda #(RES & $ff)
+	sta $04
+	lda #(RES >> 8)
+	sta $05
+
+	ldy #4
+	
+	jsr mul
+
+	lda #(res_6_7_mul & $ff)
+	sta $00
+	lda #(res_6_7_mul >> 8)
+	sta $01
+
+	lda #(RES & $ff)
+	sta $02
+	lda #(RES >> 8)
+	sta $03
+
+	jsr compare
+	bcc test1
+	jmp err_num_out
+
 	;; Test 1, add num1 and num2, compare
 test1:
 	lda #'1'
@@ -420,6 +458,20 @@ num5:
 	.byte $55
 	.byte $aa
 	.byte $55
+
+num6:
+; 32-bit ~sqrt of FFFFFFFF
+	.byte $ff
+	.byte $ff
+	.byte $00
+	.byte $00
+
+num7:
+; 32-bit ~sqrt of FFFFFFFF (other half)
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
 	
 res_1_2_mul:
 ; 37037036703 decimal as a little-endian 64-bit number. Result of multiplying num1 and num2.
@@ -508,6 +560,13 @@ res_num5_lsh:
 	.byte $ab
 	.byte $54
 	.byte $ab
+
+res_6_7_mul:
+; num6 and num7 multiplied
+	.byte $ff
+	.byte $ff
+	.byte $ff
+	.byte $ff
 	
 ; The section below will pad out the file to 32k and also insert the interrupt and reset vectors.
 ; The reset vector will point at address $8000, which is where the ROM is mapped to for the 6502
