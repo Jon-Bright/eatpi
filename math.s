@@ -2,7 +2,8 @@
 ; $0000 is two-byte LE address of operand A. The address may be stomped, the destination won't.
 ; $0002 is two-byte LE address of operand B. The address may be stomped, the destination won't.
 ; $0004 is two-byte LE address of result. The address won't be stomped, result will be stored at dest.
-; $0010 through $002f are reserved for temp values and may be stomped
+; Y contains the number of bytes in the number and won't be stomped.
+; $0006 through $002f are reserved for temp values and may be stomped
 
 	A = $00
 	A_ = $01
@@ -10,25 +11,25 @@
 	B_ = $03
 	R = $04
 	R_ = $05
-	TEMP0 = $10
-	TEMP1 = $18
-	TEMP2 = $20
-	TEMP3 = $28
+	TEMP0 = $08
+	TEMP1 = $10
+	TEMP2 = $18
+	TEMP3 = $20
 	
-mul_64:
-	;; Multiply A and B, each of which are 64-bit LE.
+mul:
+	;; Multiply A and B, each of which are little-endian numbers.
 	pha
 	phx
 	phy
 
-	jsr cpy_at0_64		; Move A to temp0 - we'll need to shift it in place
+	jsr cpy_at0		; Move A to temp0 - we'll need to shift it in place
 	;; Repoint A at temp0
 	lda #TEMP0
 	sta A
 	lda #$00
 	sta A_
 
-	jsr cpy_bt1_64 		; Copy B to temp1.
+	jsr cpy_bt1 		; Copy B to temp1.
 	;; Repoint B at temp2 (NOT temp1) - we need it to point at something stompable
 	;; as an intermediate operand 
 	lda #TEMP2
@@ -37,67 +38,74 @@ mul_64:
 	sta B_
 	
 	;; Zero B (because we'll be adding A to it)
-	ldy #7
 	lda #0
-mul_64z:
+mulz:
 	sta (B),y
 	dey
-	bpl mul_64z
+	bpl mulz
 
+	;; Save the real result address in TEMP3[0,1]. We don't need it until the end and will put our
+	;; results in (our repointed) A or B. Zero the second byte (only) of R, since it won't change.
+	ldy R
+	sty TEMP3
+	ldy R_
+	sty TEMP3+1
+	ldy #00
+	sta R_
 
+	ply			; Restore Y from stack
+	phy
 	lda #1			; Start at bit 0
 	ldx #0			; Start at byte 0 (lower-order because LE)
 
-mul_64l:
+mull:
 	bit TEMP1,x
-	beq mul_64next		; Bit not set, no add, move to next bit
+	sty TEMP3+2	       ; Dump loop Y in TEMP3[2] - we need Y for calls (this affects no flags)
+	beq mulnext	       ; Bit not set, no add, move to next bit
 
-	jsr add_64		; Bit is set, add A to intermediate (in B)
-	jsr cpy_rb_64		; Copy the result back to B. TODO: probably just make a new add variant?
-
-mul_64next:
-	jsr lsh_64		; Shift A one bit left
-	jsr cpy_ra_64		; Copy the result back to A
-	rol			; Move test bit one bit up
-	bne mul_64l		; We didn't move it out of the byte, proceed
-	inx			; Finished bits of that byte, go to next byte
-	cpx #8			; Did 8 bytes?
-	beq mul_64done		; If yes, we're done
-	lda #1			; Otherwise, start next byte at bit 0 again
-	bra mul_64l
-
-mul_64done:
-	;; We need to copy from our intermediate (B) to result (which may have been overwritten by a
-	;; shift since the last add)
-	jsr cpy_br_64
-	
+	;; Point R at TEMP2 (where B points), get number-of-bytes Y back for the call.	
+	ldy #TEMP2
+	sty R
 	ply
+	phy
+	jsr add			; Bit is set, add A to intermediate (in B), store in B
+
+mulnext:
+	;; Point R at TEMP0 (where A points), get number-of-bytes Y back for the call.
+	ldy #TEMP0
+	sty R
+	ply
+	phy
+	jsr lsh		 	; Shift A one bit left
+	ldy TEMP3+2		; Get loop Y back
+	rol			; Move test bit one bit up
+	bne mull		; We didn't move it out of the byte, proceed
+	inx			; Finished bits of that byte, go to next byte
+	dey			; Reduce bytes to do
+	beq muldone		; If bytes-to-do is zero, we're done
+	lda #1			; Otherwise, start next byte at bit 0 again
+	bra mull
+
+muldone:
+	;; We need to copy from our intermediate (B) to result.
+	ldy TEMP3
+	sty R
+	ldy TEMP3+1
+	sty R_
+
+	ply
+	jsr cpy_br
+	
 	plx
 	pla
 	rts
 
-cpy_ra_64:
-	;; Copy result to A
-	pha
-	phy
-
-	ldy #7
-cpy_ral:
-	lda (R),y
-	sta (A),y
-	dey
-	bpl cpy_ral
-
-	ply
-	pla
-	rts
-
-cpy_rb_64:
+cpy_rb:
 	;; Copy result to B
 	pha
 	phy
 
-	ldy #7
+	dey 			; Param will e.g. be 8 for 64-bit, but we want to start at byte 7
 cpy_rbl:
 	lda (R),y
 	sta (B),y
@@ -108,12 +116,12 @@ cpy_rbl:
 	pla
 	rts
 
-cpy_br_64:
+cpy_br:
 	;; Copy B to result
 	pha
 	phy
 
-	ldy #7
+	dey 			; Param will e.g. be 8 for 64-bit, but we want to start at byte 7
 cpy_brl:
 	lda (B),y
 	sta (R),y
@@ -124,14 +132,16 @@ cpy_brl:
 	pla
 	rts
 
-cpy_at0_64:
+cpy_at0:
 	;; Copy A to temp0
 	pha
 	phx
 	phy
 
-	ldy #7
-	ldx #7
+	;; Start with byte (e.g.) 7, not 8. Copy number of bytes Y->X
+	dey
+	tya
+	tax
 cpy_at0l:
 	lda (A),y
 	sta TEMP0,x
@@ -144,14 +154,16 @@ cpy_at0l:
 	pla
 	rts
 
-cpy_bt1_64:
+cpy_bt1:
 	;; Copy B to temp1
 	pha
 	phx
 	phy
 
-	ldy #7
-	ldx #7
+	;; Start with byte (e.g.) 7, not 8. Copy number of bytes Y->X
+	dey
+	tya
+	tax
 cpy_bt1l:
 	lda (B),y
 	sta TEMP1,x
@@ -164,29 +176,29 @@ cpy_bt1l:
 	pla
 	rts
 	
-rsh_64:
-	;; Shift A (64-bit LE) right by one bit (still store in result, A is not changed)
+rsh:
+	;; Shift A right by one bit (stored in R, A is not changed)
 	;;
 	;; We start at the big end and loop down. ROR shifts out of carry and into carry, we just
 	;; need to clear carry before our first ROR.
 	pha
 	phy
-	
-	ldy #7
+
+	dey 			; If we got e.g. 8, we want to start at 7
 	clc
-rsh_64l:
-	lda ($00),y
+rshl:
+	lda (A),y
 	ror
-	sta ($04),y
+	sta (R),y
 	dey
-	bpl rsh_64l
+	bpl rshl
 
 	ply
 	pla
 	rts
 
-lsh_64:
-	;; Shift A (64-bit LE) left by one bit (still store in result, A is not changed)
+lsh:
+	;; Shift A left by one bit (stored in R, A is not changed)
 	;;
 	;; We start at the little end and loop up. ROL shifts out of carry and into carry, we just
 	;; need to clear carry before our first ROR. We also need to count with X.
@@ -194,16 +206,17 @@ lsh_64:
 	phx
 	phy
 
-	ldx #8
+	tya
+	tax
 	ldy #0
 	clc
-lsh_64l:
-	lda ($00),y
+lshl:
+	lda (A),y
 	rol
-	sta ($04),y
+	sta (R),y
 	iny
 	dex
-	bne lsh_64l
+	bne lshl
 
 	ply
 	plx
@@ -211,10 +224,11 @@ lsh_64l:
 	rts
 	
 	
-add_64:
-	;; Add A and B, both unsigned 64-bit LE.
+add:
+	;; Add A and B, both unsigned LE.
 	;; 
-	;; We need to preserve the carry bit between adds. We therefore have three options (afaict):
+	;; We need to preserve the carry bit between adds. We therefore have three options (afaict).
+	;; These calculations assume 64-bit numbers.
 	;; 
 	;; a) 8 lda/adc/sta/iny repetitions, unrolled.
 	;;    Cycles: LDA, ADC, STA are 5 cycles afaict. INY is 2. We'd skip the last INY.
@@ -249,17 +263,18 @@ add_64:
 	pha
 	phx
 	phy
-	
+
+	tya			; Move number-of-bytes to X
+	tax
 	ldy #$00
-	ldx #$08
 	clc 			; No carry coming in
-a64l:
-	lda ($00),y
-	adc ($02),y
-	sta ($04),y
+addl:
+	lda (A),y
+	adc (B),y
+	sta (R),y
 	iny
 	dex
-	bne a64l
+	bne addl
 
 	ply
 	plx
@@ -267,24 +282,26 @@ a64l:
 	
 	rts
 
-cmp_64:
-	;; Compare A and B, each of which are 64-bit. C flag will be set on return if unequal.
+compare:
+	;; Compare A and B. C flag will be set on return if unequal.
 	pha
 	phy
-	
+
+	sty TEMP3
 	ldy #$00
-c64l:
-	lda ($00),y
-	cmp ($02),y
-	bne c64ne
+comparel:
+	lda (A),y
+	cmp (B),y
+	bne comparene
 	iny
-	cpy #$08
-	bne c64l
+	tya
+	sbc TEMP3
+	bne comparel
 	clc 			; Completed loop with no inequality, clear carry
-	bra c64eq
-c64ne:
+	bra compareeq
+comparene:
 	sec
-c64eq:
+compareeq:
 	ply			; These don't affect carry
 	pla
 	

@@ -26,8 +26,10 @@ test1:
 	sta $04
 	lda #(RES >> 8)
 	sta $05
+
+	ldy #8
 	
-	jsr add_64
+	jsr add
 
 	lda #(res_1_2_add & $ff)
 	sta $00
@@ -39,9 +41,9 @@ test1:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc test2
-	jmp err64
+	jmp err_num_out
 	
 	;; Test 2, add num1 and num3, compare
 test2:
@@ -63,7 +65,9 @@ test2:
 	lda #(RES >> 8)
 	sta $05
 	
-	jsr add_64
+	ldy #8
+	
+	jsr add
 
 	lda #(res_1_3_add & $ff)
 	sta $00
@@ -75,9 +79,9 @@ test2:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc test3
-	jmp err64
+	jmp err_num_out
 
 	;; Test 3, add num4 and num5, compare
 test3:
@@ -99,7 +103,9 @@ test3:
 	lda #(RES >> 8)
 	sta $05
 	
-	jsr add_64
+	ldy #8
+	
+	jsr add
 
 	lda #(res_4_5_add & $ff)
 	sta $00
@@ -111,9 +117,9 @@ test3:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc test4
-	jmp err64
+	jmp err_num_out
 
 	;; Test 4, right-shift num1, compare
 test4:
@@ -130,7 +136,9 @@ test4:
 	lda #(RES >> 8)
 	sta $05
 	
-	jsr rsh_64
+	ldy #8
+	
+	jsr rsh
 
 	lda #(res_num1_rsh & $ff)
 	sta $00
@@ -142,9 +150,9 @@ test4:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc test5
-	jmp err64
+	jmp err_num_out
 
 	;; Test 5, right-shift num5, compare
 test5:
@@ -161,7 +169,9 @@ test5:
 	lda #(RES >> 8)
 	sta $05
 	
-	jsr rsh_64
+	ldy #8
+	
+	jsr rsh
 
 	lda #(res_num5_rsh & $ff)
 	sta $00
@@ -173,9 +183,9 @@ test5:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc test6
-	jmp err64
+	jmp err_num_out
 
 	;; Test 6, left-shift num1, compare
 test6:
@@ -192,7 +202,9 @@ test6:
 	lda #(RES >> 8)
 	sta $05
 	
-	jsr lsh_64
+	ldy #8
+	
+	jsr lsh
 
 	lda #(res_num1_lsh & $ff)
 	sta $00
@@ -204,9 +216,9 @@ test6:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc test7
-	jmp err64
+	jmp err_num_out
 
 	;; Test 7, left-shift num5, compare
 test7:
@@ -223,7 +235,9 @@ test7:
 	lda #(RES >> 8)
 	sta $05
 	
-	jsr lsh_64
+	ldy #8
+	
+	jsr lsh
 
 	lda #(res_num5_lsh & $ff)
 	sta $00
@@ -235,10 +249,9 @@ test7:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc test8
-	jmp err64
-	
+	jmp err_num_out
 
 	;; Test 8, multiply num1 and num2, compare
 test8:
@@ -260,7 +273,9 @@ test8:
 	lda #(RES >> 8)
 	sta $05
 	
-	jsr mul_64
+	ldy #8
+	
+	jsr mul
 
 	lda #(res_1_2_mul & $ff)
 	sta $00
@@ -272,9 +287,9 @@ test8:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc test9
-	jmp err64
+	jmp err_num_out
 
 	;; Test 9, multiply num2 and num1, compare
 	;; This _should_ be exactly the same result as test 8.
@@ -297,7 +312,9 @@ test9:
 	lda #(RES >> 8)
 	sta $05
 
-	jsr mul_64
+	ldy #8
+	
+	jsr mul
 
 	lda #(res_1_2_mul & $ff)
 	sta $00
@@ -309,9 +326,9 @@ test9:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr cmp_64
+	jsr compare
 	bcc testA
-	jmp err64
+	jmp err_num_out
 
 	;; Our work here is done
 testA:
@@ -324,12 +341,11 @@ testA:
 loop:
 	jmp loop
 
-err64:
+err_num_out:
 	lda #(RES & $ff)
 	sta $20
 	lda #(RES >> 8)
 	sta $21
-	ldy #8
 	jsr lcd_hex
 	;; Fallthrough
 error:
