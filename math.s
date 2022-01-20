@@ -39,6 +39,7 @@ mul:
 	
 	;; Zero B (because we'll be adding A to it)
 	lda #0
+	dey 			; If we're given e.g. length 8, we want to start at byte 7.
 mulz:
 	sta (B),y
 	dey
@@ -78,6 +79,7 @@ mulnext:
 	phy
 	jsr lsh		 	; Shift A one bit left
 	ldy TEMP3+2		; Get loop Y back
+	clc                     ; Don't want to rotate any bits into A
 	rol			; Move test bit one bit up
 	bne mull		; We didn't move it out of the byte, proceed
 	inx			; Finished bits of that byte, go to next byte
