@@ -56,6 +56,18 @@ mulz:
 
 	ply			; Restore Y from stack
 	phy
+
+	;; As long as the top-end bytes are zero, reduce Y (this won't affect the _stack_ Y, which
+	;; we use for shift/add calls, but will affect the _loop_ Y, which we use to know when we're
+	;; done).
+	dey 			; Look at last byte (e.g. 7 not 8 for 64-bit). We'll reincrement below.
+mulrechecky:
+	lda TEMP1,y
+	bne mulyisgood
+	dey
+	bra mulrechecky
+mulyisgood:
+	iny			; Reincrement the decrement above
 	lda #1			; Start at bit 0
 	ldx #0			; Start at byte 0 (lower-order because LE)
 
