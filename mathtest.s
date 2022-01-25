@@ -11,6 +11,7 @@ reset:
 
 	;; Test 1, add num1 and num2, compare
 test1:
+	jsr lcd_home
 	lda #'1'
 	jsr lcd_char_out
 
@@ -49,6 +50,7 @@ test1:
 
 	;; Test 2, add num1 and num3, compare
 test2:
+	jsr lcd_home
 	lda #'2'
 	jsr lcd_char_out
 
@@ -87,6 +89,7 @@ test2:
 
 	;; Test 3, add num4 and num5, compare
 test3:
+	jsr lcd_home
 	lda #'3'
 	jsr lcd_char_out
 
@@ -125,6 +128,7 @@ test3:
 
 	;; Test 4, right-shift num1, compare
 test4:
+	jsr lcd_home
 	lda #'4'
 	jsr lcd_char_out
 
@@ -158,6 +162,7 @@ test4:
 
 	;; Test 5, right-shift num5, compare
 test5:
+	jsr lcd_home
 	lda #'5'
 	jsr lcd_char_out
 
@@ -191,6 +196,7 @@ test5:
 
 	;; Test 6, left-shift num1, compare
 test6:
+	jsr lcd_home
 	lda #'6'
 	jsr lcd_char_out
 
@@ -224,6 +230,7 @@ test6:
 
 	;; Test 7, left-shift num5, compare
 test7:
+	jsr lcd_home
 	lda #'7'
 	jsr lcd_char_out
 
@@ -257,6 +264,7 @@ test7:
 
 	;; Test 8, multiply num1 and num2, compare
 test8:
+	jsr lcd_home
 	lda #'8'
 	jsr lcd_char_out
 
@@ -296,6 +304,7 @@ test8:
 	;; Test 9, multiply num2 and num1, compare
 	;; This _should_ be exactly the same result as test 8.
 test9:
+	jsr lcd_home
 	lda #'9'
 	jsr lcd_char_out
 
@@ -334,6 +343,7 @@ test9:
 
 	;; Test A, multiply (now 32-bit!) num6 and num7, compare
 testA:
+	jsr lcd_home
 	lda #'A'
 	jsr lcd_char_out
 
@@ -372,6 +382,7 @@ testA:
 
 	;; Test B, subtract num1 from num3, compare
 testB:
+	jsr lcd_home
 	lda #'B'
 	jsr lcd_char_out
 
@@ -410,6 +421,7 @@ testB:
 
 	;; Test C, subtract num7 from num7, compare
 testC:
+	jsr lcd_home
 	lda #'C'
 	jsr lcd_char_out
 
@@ -449,6 +461,7 @@ testC:
 
 	;; Test D, subtract num8 from num7, compare
 testD:
+	jsr lcd_home
 	lda #'D'
 	jsr lcd_char_out
 
