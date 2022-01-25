@@ -29,7 +29,12 @@ lcd_init:
 	jsr lcd_setup_cmd
 
 	rts
-	
+
+lcd_home:
+	lda #%00000010
+	jsr lcd_setup_cmd
+	rts
+
 lcd_print:
 	;; Print the message pointed to at $0020/1 to the LCD
 	ldy #0
