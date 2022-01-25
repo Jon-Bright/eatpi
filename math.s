@@ -341,14 +341,14 @@ cmpeq:
 
 	sty TEMP3
 	ldy #$00
-cmpeqrel:
+cmpeql:
 	lda (A),y
 	cmp (B),y
 	bne cmpeqne
 	iny
 	tya
 	sbc TEMP3
-	bne cmpeqrel
+	bne cmpeql
 	clc 			; Completed loop with no inequality, clear carry
 	bra cmpeqeq
 cmpeqne:
