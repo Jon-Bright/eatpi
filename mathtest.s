@@ -9,44 +9,6 @@ reset:
 
 	jsr lcd_init
 
-	;; Test 0 (TODO), multiply (now 32-bit!) num6 and num7, compare
-test0:
-	lda #'0'
-	jsr lcd_char_out
-	
-	lda #(num6 & $ff)
-	sta $00
-	lda #(num6 >> 8)
-	sta $01
-
-	lda #(num7 & $ff)
-	sta $02
-	lda #(num7 >> 8)
-	sta $03
-
-	lda #(RES & $ff)
-	sta $04
-	lda #(RES >> 8)
-	sta $05
-
-	ldy #4
-	
-	jsr mul
-
-	lda #(res_6_7_mul & $ff)
-	sta $00
-	lda #(res_6_7_mul >> 8)
-	sta $01
-
-	lda #(RES & $ff)
-	sta $02
-	lda #(RES >> 8)
-	sta $03
-
-	jsr cmpeq
-	bcc test1
-	jmp err_num_out
-
 	;; Test 1, add num1 and num2, compare
 test1:
 	lda #'1'
@@ -370,8 +332,46 @@ test9:
 	bcc testA
 	jmp err_num_out
 
-	;; Our work here is done
+	;; Test A, multiply (now 32-bit!) num6 and num7, compare
 testA:
+	lda #'A'
+	jsr lcd_char_out
+	
+	lda #(num6 & $ff)
+	sta $00
+	lda #(num6 >> 8)
+	sta $01
+
+	lda #(num7 & $ff)
+	sta $02
+	lda #(num7 >> 8)
+	sta $03
+
+	lda #(RES & $ff)
+	sta $04
+	lda #(RES >> 8)
+	sta $05
+
+	ldy #4
+	
+	jsr mul
+
+	lda #(res_6_7_mul & $ff)
+	sta $00
+	lda #(res_6_7_mul >> 8)
+	sta $01
+
+	lda #(RES & $ff)
+	sta $02
+	lda #(RES >> 8)
+	sta $03
+
+	jsr cmpeq
+	bcc testB
+	jmp err_num_out
+
+	;; Our work here is done
+testB:
 	lda #(msg_ok & $ff)
 	sta $20
 	lda #(msg_ok >> 8)
