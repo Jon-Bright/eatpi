@@ -1,5 +1,7 @@
 RES = $3000
 
+#include "call.s"
+
 * = $8000      ; $8000 is the bottom of our ROM
 reset:
 	ldx #$ff       ; Point at top of stack

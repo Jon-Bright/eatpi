@@ -5,12 +5,6 @@
 ; Y contains the number of bytes in the number and won't be stomped.
 ; $0006 through $002f are reserved for temp values and may be stomped
 
-	A = $00
-	A_ = $01
-	B = $02
-	B_ = $03
-	R = $04
-	R_ = $05
 	TEMP0 = $08
 	TEMP1 = $10
 	TEMP2 = $18
@@ -187,6 +181,22 @@ cpy_bt1l:
 
 	ply
 	plx
+	pla
+	rts
+
+copy:
+	;; Generic copy from A to R
+	pha
+	phy
+
+	dey 			; Param will e.g. be 8 for 64-bit, but we want to start at byte 7
+copyl:
+	lda (A),y
+	sta (R),y
+	dey
+	bpl copyl
+
+	ply
 	pla
 	rts
 	
