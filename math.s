@@ -306,26 +306,26 @@ addl:
 	
 	rts
 
-compare:
+cmpeq:
 	;; Compare A and B. C flag will be set on return if unequal.
 	pha
 	phy
 
 	sty TEMP3
 	ldy #$00
-comparel:
+cmpeqrel:
 	lda (A),y
 	cmp (B),y
-	bne comparene
+	bne cmpeqne
 	iny
 	tya
 	sbc TEMP3
-	bne comparel
+	bne cmpeqrel
 	clc 			; Completed loop with no inequality, clear carry
-	bra compareeq
-comparene:
+	bra cmpeqeq
+cmpeqne:
 	sec
-compareeq:
+cmpeqeq:
 	ply			; These don't affect carry
 	pla
 	

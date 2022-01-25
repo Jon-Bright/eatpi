@@ -43,7 +43,7 @@ test0:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test1
 	jmp err_num_out
 
@@ -81,7 +81,7 @@ test1:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test2
 	jmp err_num_out
 	
@@ -119,7 +119,7 @@ test2:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test3
 	jmp err_num_out
 
@@ -157,7 +157,7 @@ test3:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test4
 	jmp err_num_out
 
@@ -190,7 +190,7 @@ test4:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test5
 	jmp err_num_out
 
@@ -223,7 +223,7 @@ test5:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test6
 	jmp err_num_out
 
@@ -256,7 +256,7 @@ test6:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test7
 	jmp err_num_out
 
@@ -289,7 +289,7 @@ test7:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test8
 	jmp err_num_out
 
@@ -327,7 +327,7 @@ test8:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc test9
 	jmp err_num_out
 
@@ -366,7 +366,7 @@ test9:
 	lda #(RES >> 8)
 	sta $03
 
-	jsr compare
+	jsr cmpeq
 	bcc testA
 	jmp err_num_out
 
