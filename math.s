@@ -356,5 +356,31 @@ cmpeqne:
 cmpeqeq:
 	ply			; These don't affect carry
 	pla
-	
+
+	rts
+
+
+cmpge:
+	;; Compare A >= B. C flag will be set on return iff A >= B
+	pha
+	phy
+
+	dey			; If we started with e.g. 8 byte length, we want to look at byte 7.
+cmpgel:
+	lda (A),y
+	cmp (B),y
+	bcc cmpgeend 		; If carry is clear, A < B, we're done, exit
+	bne cmpgeend		; If _zero_ is clear, A != B, but we know it's not less, so it must be
+				; more, so we're also done, A is definitely > B
+	;; OK, we need to proceed to a lower-order byte
+	dey
+	bpl cmpgel
+	;; If we get here, there were no more bytes to look at. We didn't find any bytes that were less,
+	;; nor any bytes that were more, therefore the numbers are equal. Carry should already be set
+	;; (DEY doesn't affect it and the branches don't either), so we can just fall through
+
+cmpgeend:
+	ply			; These don't affect carry
+	pla
+
 	rts

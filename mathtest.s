@@ -498,8 +498,99 @@ testD:
 	bcc testE
 	jmp err_num_out
 
-	;; Our work here is done
+
+	;; Test E, compare num7 >= num7, expect carry set
 testE:
+	jsr lcd_home
+	lda #'E'
+	jsr lcd_char_out
+
+	lda #(num7 & $ff)
+	sta A
+	lda #(num7 >> 8)
+	sta A_
+
+	lda #(num7 & $ff)
+	sta B
+	lda #(num7 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr cmpge
+
+	bcs testF
+	jmp err_num_out
+
+
+	;; Test F, compare num7 >= num8, expect carry clear
+testF:
+	jsr lcd_home
+	lda #'F'
+	jsr lcd_char_out
+
+	lda #(num7 & $ff)
+	sta A
+	lda #(num7 >> 8)
+	sta A_
+
+	lda #(num8 & $ff)
+	sta B
+	lda #(num8 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr cmpge
+
+	bcc test10
+	jmp err_num_out
+
+
+	;; Test 10, compare num8 >= num7, expect carry set
+test10:
+	jsr lcd_home
+	lda #'1'
+	jsr lcd_char_out
+	lda #'0'
+	jsr lcd_char_out
+
+	lda #(num8 & $ff)
+	sta A
+	lda #(num8 >> 8)
+	sta A_
+
+	lda #(num7 & $ff)
+	sta B
+	lda #(num7 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr cmpge
+
+	bcs test11
+	jmp err_num_out
+
+
+
+	;; Our work here is done
+test11:
 	lda #(msg_ok & $ff)
 	sta $20
 	lda #(msg_ok >> 8)
