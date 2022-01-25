@@ -370,14 +370,129 @@ testA:
 	bcc testB
 	jmp err_num_out
 
-	;; Our work here is done
+	;; Test B, subtract num1 from num3, compare
 testB:
+	lda #'B'
+	jsr lcd_char_out
+
+	lda #(num3 & $ff)
+	sta A
+	lda #(num3 >> 8)
+	sta A_
+
+	lda #(num1 & $ff)
+	sta B
+	lda #(num1 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #8
+
+	jsr sub
+
+	lda #(res_3_1_sub & $ff)
+	sta A
+	lda #(res_3_1_sub >> 8)
+	sta A_
+
+	lda #(RES & $ff)
+	sta B
+	lda #(RES >> 8)
+	sta B_
+
+	jsr cmpeq
+	bcc testC
+	jmp err_num_out
+
+	;; Test C, subtract num7 from num7, compare
+testC:
+	lda #'C'
+	jsr lcd_char_out
+
+	lda #(num7 & $ff)
+	sta A
+	lda #(num7 >> 8)
+	sta A_
+
+	lda #(num7 & $ff)
+	sta B
+	lda #(num7 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr sub
+
+	lda #(res_7_7_sub & $ff)
+	sta A
+	lda #(res_7_7_sub >> 8)
+	sta A_
+
+	lda #(RES & $ff)
+	sta B
+	lda #(RES >> 8)
+	sta B_
+
+	jsr cmpeq
+	bcc testD
+	jmp err_num_out
+
+
+	;; Test D, subtract num8 from num7, compare
+testD:
+	lda #'D'
+	jsr lcd_char_out
+
+	lda #(num7 & $ff)
+	sta A
+	lda #(num7 >> 8)
+	sta A_
+
+	lda #(num8 & $ff)
+	sta B
+	lda #(num8 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr sub
+
+	lda #(res_7_8_sub & $ff)
+	sta A
+	lda #(res_7_8_sub >> 8)
+	sta A_
+
+	lda #(RES & $ff)
+	sta B
+	lda #(RES >> 8)
+	sta B_
+
+	jsr cmpeq
+	bcc testE
+	jmp err_num_out
+
+	;; Our work here is done
+testE:
 	lda #(msg_ok & $ff)
 	sta $20
 	lda #(msg_ok >> 8)
 	sta $21
 	jsr lcd_print
-	
+
 loop:
 	jmp loop
 
@@ -474,6 +589,13 @@ num7:
 	.byte $00
 	.byte $01
 	.byte $00
+
+num8:
+; 1 more than num7, for purpose of subtraction test
+	.byte $02
+	.byte $00
+	.byte $01
+	.byte $00
 	
 res_1_2_mul:
 ; 37037036703 decimal as a little-endian 64-bit number. Result of multiplying num1 and num2.
@@ -565,6 +687,31 @@ res_num5_lsh:
 
 res_6_7_mul:
 ; num6 and num7 multiplied
+	.byte $ff
+	.byte $ff
+	.byte $ff
+	.byte $ff
+
+res_3_1_sub:
+; num3 minus num1
+	.byte $9d
+	.byte $18
+	.byte $68
+	.byte $75
+	.byte $fc
+	.byte $00
+	.byte $01
+	.byte $01
+
+res_7_7_sub:
+; num7 minus num7 - zero
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+
+res_7_8_sub:
+; num7 minus num8 - minus 1
 	.byte $ff
 	.byte $ff
 	.byte $ff

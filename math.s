@@ -306,6 +306,34 @@ addl:
 	
 	rts
 
+
+sub:
+	;; Subtract B from A
+	;; Same performance considerations as for add, same choices made.
+	pha
+	phx
+	phy
+
+	tya			; Move number-of-bytes to X
+	tax
+	ldy #$00
+	sec 			; SBC uses an "inverse borrow", set carry.
+subl:
+	lda (A),y
+	sbc (B),y
+	sta (R),y
+	iny
+	dex
+	bne subl
+
+	ply
+	plx
+	pla
+
+	rts
+
+
+
 cmpeq:
 	;; Compare A and B. C flag will be set on return if unequal.
 	pha
