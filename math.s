@@ -9,6 +9,115 @@
 	TEMP1 = $10
 	TEMP2 = $18
 	TEMP3 = $20
+
+div:
+	;; Divide A by B, each little-endian.
+	pha
+	phx
+	phy
+
+	;; TEMP0 : quotient
+	;; TEMP1 : Remainder
+	;; TEMP2 : Saved copy of address in parameter A (we need A for our own purposes)
+	;; TEMP3 : Saving loop Y[0], R[1], R_[2]
+
+	;; Move A to TEMP2
+	lda A
+	sta TEMP2
+	lda A_
+	sta TEMP2+1
+	;; Move R to TEMP3[1,2]
+	lda R
+	sta TEMP3+1
+	lda R_
+	sta TEMP3+2
+	;; Repoint A and R at TEMP1 (remainder)
+	lda #TEMP1
+	sta A
+	sta R
+	lda #0
+	sta A_
+	sta R_
+
+	;; Zero quotient and remainder
+	tya
+	tax
+	dex 			; If we're given e.g. length 8, we want to start at byte 7.
+	lda #0
+divz:
+	sta TEMP0,x
+	sta TEMP1,x
+	dex
+	bpl divz
+
+	dey			; Y points at most significant byte
+divnewbyte:
+	lda #$80		; Most significant bit
+
+divl:
+	;; Shift the remainder (which A points at) one bit left
+	sty TEMP3		; Need to restore byte count Y, save loop Y
+	ply
+	phy
+	jsr lsh
+	ldy TEMP3
+
+
+	;; Set the lowest bit of the remainder to the current bit of the numerator (going high-to-low)
+	pha			; Save A: we'll futz with it below, but it's tracking which bit we're on
+	and (TEMP2),y		; Get the bit from the numerator
+	beq divnoset		; No bit set, don't need to set anything
+	lda #1			; Doesn't matter which bit we're looking at, we need to set the bottom
+	ora TEMP1		; Or with the bits already in the low-order byte of the remainder
+	sta TEMP1		; Set the low-order byte of the remainder
+divnoset:
+	pla			; Restore A
+
+	;; Compare, is remainder >= divisor?
+	sty TEMP3 		; Need to restore byte count Y, save loop Y here
+	ply
+	phy
+	;; A already points at the remainder, B already points at the divisor, we can call cmpge
+	jsr cmpge
+	bcc divnext		; If carry is clear, remainder is less than divisor, move to next bit
+
+	;; Remainder is greater, so we need to subtract the divisor from the remainder and set this bit
+	;; of the quotient. Again, A points at the remainder (which we're subtracting from) and B points
+	;; at the divisor, which we're subtracting. Y still has the byte count. R points at the same
+	;; place as A, so we can just do the call.
+	jsr sub
+
+	;; Set quotient bit.
+	ldy TEMP3		; Get loop Y back
+	pha
+	ora TEMP0,y
+	sta TEMP0,y		; A still has the correct bit
+	pla
+
+divnext:
+	;; Restore loop Y (for the second time if this is the quotient branch, but doing a branch to
+	;; avoid this doesn't seem worthwhile in any respect)
+	ldy TEMP3
+	clc			; Don't want to rotate anything into A
+	ror			; Rotate to less-significant
+	bne divl		; If that didn't result in zero, start next loop
+	dey			; OK, next byte
+	bpl divnewbyte		; If byte is still >=0, start next byte
+	;; Our work here is done - we just need to copy TEMP0 to R
+	lda #TEMP0
+	sta A
+	lda #00
+	sta A_
+	lda TEMP3+1
+	sta R
+	lda TEMP3+2
+	sta R_
+	ply
+	jsr copy
+
+	plx
+	pla
+	rts
 	
 mul:
 	;; Multiply A and B, each of which are little-endian numbers.

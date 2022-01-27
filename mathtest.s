@@ -9,6 +9,7 @@ reset:
 
 	jsr lcd_init
 
+
 	;; Test 1, add num1 and num2, compare
 test1:
 	jsr lcd_home
@@ -588,9 +589,92 @@ test10:
 	jmp err_num_out
 
 
+	;; Test 11, divide num9 by numA, compare
+test11:
+	jsr lcd_home
+	lda #'1'
+	jsr lcd_char_out
+	lda #'1'
+	jsr lcd_char_out
+
+	lda #(num9 & $ff)
+	sta A
+	lda #(num9 >> 8)
+	sta A_
+
+	lda #(numA & $ff)
+	sta B
+	lda #(numA >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr div
+
+	lda #(res_9_A_div & $ff)
+	sta A
+	lda #(res_9_A_div >> 8)
+	sta A_
+
+	lda #(RES & $ff)
+	sta B
+	lda #(RES >> 8)
+	sta B_
+
+	jsr cmpeq
+	bcc test12
+	jmp err_num_out
+
+
+	;; Test 12, divide num3 by num1, compare
+test12:
+	jsr lcd_home
+	lda #'1'
+	jsr lcd_char_out
+	lda #'2'
+	jsr lcd_char_out
+
+	lda #(num3 & $ff)
+	sta A
+	lda #(num3 >> 8)
+	sta A_
+
+	lda #(num1 & $ff)
+	sta B
+	lda #(num1 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #8
+
+	jsr div
+
+	lda #(res_3_1_div & $ff)
+	sta A
+	lda #(res_3_1_div >> 8)
+	sta A_
+
+	lda #(RES & $ff)
+	sta B
+	lda #(RES >> 8)
+	sta B_
+
+	jsr cmpeq
+	bcc test13
+	jmp err_num_out
+
 
 	;; Our work here is done
-test11:
+test13:
 	lda #(msg_ok & $ff)
 	sta $20
 	lda #(msg_ok >> 8)
@@ -699,6 +783,20 @@ num8:
 	.byte $02
 	.byte $00
 	.byte $01
+	.byte $00
+
+num9:
+	;; $12345 * $1abc
+	.byte $ac
+	.byte $e8
+	.byte $6a
+	.byte $1e
+
+numA:
+	;; Divisor for num9
+	.byte $bc
+	.byte $1a
+	.byte $00
 	.byte $00
 
 res_1_2_mul:
@@ -821,6 +919,23 @@ res_7_8_sub:
 	.byte $ff
 	.byte $ff
 
+res_9_A_div:
+	;; num9 divided by numA
+	.byte $45
+	.byte $23
+	.byte $01
+	.byte $00
+
+res_3_1_div:
+	;; num3 divided by num1. There's a remainder too, not represented here.
+	.byte $e1
+	.byte $68
+	.byte $59
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
 
 codeend:
 	;; This section will pad out the file to 32k and also insert the interrupt and reset vectors.
