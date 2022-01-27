@@ -168,6 +168,9 @@ mulrechecky:
 	lda TEMP1,y
 	bne mulyisgood
 	dey
+	bmi muldone		; Ooops! We got to byte $ff, which means all bytes were zero.
+				; Anything by zero is zero and zero's already in B, so we can just skip
+				; everything and go to done.
 	bra mulrechecky
 mulyisgood:
 	iny			; Reincrement the decrement above

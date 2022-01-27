@@ -673,8 +673,49 @@ test12:
 	jmp err_num_out
 
 
-	;; Our work here is done
+	;; Test 13, multiply num9 by numB (zero), compare
 test13:
+	jsr lcd_home
+	lda #'1'
+	jsr lcd_char_out
+	lda #'3'
+	jsr lcd_char_out
+	
+	lda #(num9 & $ff)
+	sta A
+	lda #(num9 >> 8)
+	sta A_
+
+	lda #(numB & $ff)
+	sta B
+	lda #(numB >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr mul
+
+	lda #(res_9_B_mul & $ff)
+	sta A
+	lda #(res_9_B_mul >> 8)
+	sta A_
+
+	lda #(RES & $ff)
+	sta B
+	lda #(RES >> 8)
+	sta B_
+
+	jsr cmpeq
+	bcc test14
+	jmp err_num_out
+
+	;; Our work here is done
+test14:
 	lda #(msg_ok & $ff)
 	sta $20
 	lda #(msg_ok >> 8)
@@ -796,6 +837,13 @@ numA:
 	;; Divisor for num9
 	.byte $bc
 	.byte $1a
+	.byte $00
+	.byte $00
+
+numB:
+	;; Zero, to test multiplying by zero
+	.byte $00
+	.byte $00
 	.byte $00
 	.byte $00
 
@@ -932,6 +980,13 @@ res_3_1_div:
 	.byte $68
 	.byte $59
 	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+
+res_9_B_mul:
+	;; num9 (or indeed anything else) multiplied by numB.
 	.byte $00
 	.byte $00
 	.byte $00
