@@ -118,7 +118,7 @@ divnext:
 	plx
 	pla
 	rts
-	
+
 mul:
 	;; Multiply A and B, each of which are little-endian numbers.
 	pha
@@ -134,12 +134,12 @@ mul:
 
 	jsr cpy_bt1 		; Copy B to temp1.
 	;; Repoint B at temp2 (NOT temp1) - we need it to point at something stompable
-	;; as an intermediate operand 
+	;; as an intermediate operand
 	lda #TEMP2
 	sta B
 	lda #$00
 	sta B_
-	
+
 	;; Zero B (because we'll be adding A to it)
 	lda #0
 	dey 			; If we're given e.g. length 8, we want to start at byte 7.
@@ -182,7 +182,7 @@ mull:
 	sty TEMP3+2	       ; Dump loop Y in TEMP3[2] - we need Y for calls (this affects no flags)
 	beq mulnext	       ; Bit not set, no add, move to next bit
 
-	;; Point R at TEMP2 (where B points), get number-of-bytes Y back for the call.	
+	;; Point R at TEMP2 (where B points), get number-of-bytes Y back for the call.
 	ldy #TEMP2
 	sty R
 	ply
@@ -215,7 +215,7 @@ muldone:
 
 	ply
 	jsr cpy_br
-	
+
 	plx
 	pla
 	rts
@@ -311,7 +311,7 @@ copyl:
 	ply
 	pla
 	rts
-	
+
 rsh:
 	;; Shift A right by one bit (stored in R, A is not changed)
 	;;
@@ -358,20 +358,20 @@ lshl:
 	plx
 	pla
 	rts
-	
-	
+
+
 add:
 	;; Add A and B, both unsigned LE.
-	;; 
+	;;
 	;; We need to preserve the carry bit between adds. We therefore have three options (afaict).
 	;; These calculations assume 64-bit numbers.
-	;; 
+	;;
 	;; a) 8 lda/adc/sta/iny repetitions, unrolled.
 	;;    Cycles: LDA, ADC, STA are 5 cycles afaict. INY is 2. We'd skip the last INY.
 	;;    Total cycles: 17*8-2=134 cycles.
 	;;    Bytes: LDA, ADC, STA are 2 bytes. INY is 1.
 	;;    Total bytes: 7*8-1=55 bytes.
-	;; 
+	;;
 	;; b) No unrolling, using CPY to compare Y with 8. CPY will (in our case) clear carry.
 	;;    We'd therefore, after INY, do a BCS to different branches, one doing a CPY, BNE and the
 	;;    other doing a CPY, SEC, BNE.
@@ -415,7 +415,7 @@ addl:
 	ply
 	plx
 	pla
-	
+
 	rts
 
 
