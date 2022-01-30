@@ -300,7 +300,7 @@ dig0_shifted:
 	lda #(const_448 >> 8)
 	sta B_
 	jsr add
-
+jsr pause
 	;; resSum = sum[firstnz];
 	ldx FIRSTNZ		; Implies FIRSTNZ is <=$ff, should be fine for our purposes
 	jsr calc_sum_addr	; Gets the right PI_PART address into PITEMP0
@@ -652,7 +652,7 @@ ovlloop:
 	ldx FIRSTNZ
 ovll:
 	dex			; Both the initial -1 and the loop's --loc
-	beq ovlloopdone
+	bmi ovlloopdone
 	lda SUMOVL
 	ora SUMOVL+1
 	ora SUMOVL+2
