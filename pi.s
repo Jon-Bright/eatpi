@@ -619,6 +619,7 @@ fnzdivloop:
 
 	;; sumOvl = (int32_t)(resSum>>32);
 	lda A
+	clc			; We only want to add 4, thanks.
 	adc #4
 	sta A
 	lda #SUMOVL
