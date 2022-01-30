@@ -123,7 +123,7 @@ calc_component:
 	;; dig0 = 0x80000000U >> (p2 & 0x1f);
 	lda P2
 	and #$1f
-	beq dig0_shifted:
+	beq dig0_shifted
 	tax
 	lda #0
 	sta DIG0
