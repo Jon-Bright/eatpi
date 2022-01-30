@@ -576,8 +576,7 @@ fnzdivloop:
 
 	lda #DIVIDEND
 	sta A
-	lda #DIV
-	adc PITEMP1		; div offset from above
+	lda #PITEMP2
 	sta B
 	lda #DIG
 	sta R
