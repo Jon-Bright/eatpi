@@ -300,7 +300,7 @@ dig0_shifted:
 	lda #(const_448 >> 8)
 	sta B_
 	jsr add
-jsr pause
+
 	;; resSum = sum[firstnz];
 	ldx FIRSTNZ		; Implies FIRSTNZ is <=$ff, should be fine for our purposes
 	jsr calc_sum_addr	; Gets the right PI_PART address into PITEMP0
@@ -467,8 +467,6 @@ div_setup_done:
 	sta B
 	jsr add
 
-	jsr pause
-
 	inx
 	cpx #7
 	beq divloopdone
@@ -496,7 +494,6 @@ divloopdone:
 	lda #0
 	sta R_
 	jsr copy
-	jsr pause
 
 	;; for(loc = firstnz - 1; sumOvl && loc >= 0; --loc ) {
 	jsr ovlloop		; Implements that whole loop
@@ -596,7 +593,6 @@ fnzdivloop:
 	lda DIVREM+3
 	sta REMAINDERS+3,x
 	plx
-	jsr pause
 
 	;; resSum += dig;
 	lda #RESSUM
@@ -605,7 +601,6 @@ fnzdivloop:
 	lda #DIG
 	sta B
 	jsr add			; This'll be an 8-byte add. That's fine, DIG is zero-padded.
-	jsr pause
 
 	inx
 	cpx #7
