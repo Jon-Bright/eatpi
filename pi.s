@@ -515,18 +515,22 @@ fnzloopcont:
 	jsr calc_sum_addr
 	;; cast/copy from *PITEMP0 to RESSUM
 	ldy #0
-	lda (PITEMP0),y
-	sta RESSUM
-	lda (PITEMP0+1),y
-	sta RESSUM+1
-	lda (PITEMP0+2),y
-	sta RESSUM+2
-	lda (PITEMP0+3),y
-	sta RESSUM+3
 	sty RESSUM+4
 	sty RESSUM+5
 	sty RESSUM+6
 	sty RESSUM+7
+	lda (PITEMP0),y
+	iny
+	sta RESSUM
+	lda (PITEMP0),y
+	iny
+	sta RESSUM+1
+	lda (PITEMP0),y
+	iny
+	sta RESSUM+2
+	lda (PITEMP0),y
+	iny
+	sta RESSUM+3
 
 	;; for(j = 0; j < 7; ++j) {
 	ldx #0
@@ -663,18 +667,21 @@ ovll:
 	jsr calc_sum_addr	; loc is already in X. Get sum[loc] addr into PITEMP0.
 	;; cast/copy from *PITEMP0 to PITEMP2 (which is 64-bit)
 	ldy #0
-	lda (PITEMP0),y
-	sta PITEMP2
-	lda (PITEMP0+1),y
-	sta PITEMP2+1
-	lda (PITEMP0+2),y
-	sta PITEMP2+2
-	lda (PITEMP0+3),y
-	sta PITEMP2+3
 	sty PITEMP2+4
 	sty PITEMP2+5
 	sty PITEMP2+6
 	sty PITEMP2+7
+	lda (PITEMP0),y
+	iny
+	sta PITEMP2
+	lda (PITEMP0),y
+	iny
+	sta PITEMP2+1
+	lda (PITEMP0),y
+	iny
+	sta PITEMP2+2
+	lda (PITEMP0),y
+	sta PITEMP2+3
 	lda #PITEMP2
 	sta A
 	;; A_ is still zero from above
@@ -688,18 +695,23 @@ ovll:
 	;; a bunch of copying
 	lda #(RESSUM + 4)
 	sta R
+	ldy #8
 	jsr add			;TODO: Not sure this does the right thing if sumOvl is negative
 
 	;; sum[loc] = resSum;
 	;; Top 32 bits of resSum into sum[loc]
+	ldy #0
 	lda RESSUM+4
 	sta (PITEMP0),y
+	iny
 	lda RESSUM+5
-	sta (PITEMP0+1),y
+	sta (PITEMP0),y
+	iny
 	lda RESSUM+6
-	sta (PITEMP0+2),y
+	sta (PITEMP0),y
+	iny
 	lda RESSUM+7
-	sta (PITEMP0+3),y
+	sta (PITEMP0),y
 
 	;; sumOvl = (int32_t)(resSum>>32);
 	;; Nothing to do, see longer comment above.
