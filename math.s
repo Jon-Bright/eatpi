@@ -12,6 +12,7 @@
 
 div:
 	;; Divide A by B, each little-endian.
+	;; This leaves the remainder in TEMP1
 	pha
 	phx
 	phy
