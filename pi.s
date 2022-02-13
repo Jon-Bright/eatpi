@@ -1,6 +1,10 @@
-	DIGIT_PREC = 1000
-	WORD_PREC = DIGIT_PREC * 104 / 1000 + 2 ; 106
-	COMP_COUNT = (32 * WORD_PREC + 11) / 10 ; (32*106+11)/10 = (3392+11)/10 = 3403/10 = 340
+	DIGIT_PREC = 10
+	WORD_PREC = DIGIT_PREC * 104 / 1000 + 2
+	;; For 10: 10 * 104 / 1000 + 2 =1040 / 1000 + 2 = 1 + 2 =3
+	;; For 1000: 1000 * 104 / 1000 + 2 =104000 / 1000 + 2 =104 + 2 =106
+	COMP_COUNT = (32 * WORD_PREC + 11) / 10
+	;; For 10: (32 * 3 + 11) / 10 =(96 + 11) / 10 =107 / 10 =10
+	;; For 1000: (32 * 106 + 11) / 10 =(3392 + 11) / 10 =3403 / 10 =340
 
 	* = $8000		; $8000 is the bottom of our ROM
 
@@ -74,6 +78,7 @@ pi_partz:
 	bpl pi_partz
 
 calc_component:
+	;; p2 = 29 + 10 * i;
 	;; Multiply component counter by 10
 	lda #(COMPCNT & $ff)
 	sta A
@@ -89,7 +94,6 @@ calc_component:
 	sta R_
 	ldy #4
 	jsr mul
-
 	;; Add 29
 	lda #(P2)
 	sta A
@@ -102,7 +106,8 @@ calc_component:
 	;; Don't fill R - it still points at P2, which is where we want the result
 	jsr add
 
-	;; Copy P2 to FIRSTNZ.
+	;; firstnz = p2 >> 5;
+	;; copy first, then shift
 	lda #(P2)
 	sta A
 	lda #0
@@ -111,7 +116,6 @@ calc_component:
 	sta R
 	jsr copy
 
-	;; FIRSTNZ >>= 5
 	lda #(FIRSTNZ)
 	sta A
 	jsr rsh
@@ -617,6 +621,8 @@ fnzdivloop:
 	ldy #4
 	jsr copy
 
+	;; 	jsr pause
+
 	;; sumOvl = (int32_t)(resSum>>32);
 	lda A
 	clc			; We only want to add 4, thanks.
@@ -633,7 +639,20 @@ fnzdivloop:
 
 	jmp fnzloop
 fnzloopdone:
-	;; ...
+	;; Increment COMPCNT, check if we're done, otherwise back to the start
+	inc COMPCNT
+	bne checkcc		; Not zero after inc -> no need to inc second byte
+	inc COMPCNT+1
+checkcc:
+	lda COMPCNT
+	cmp #(COMP_COUNT & $ff)
+	bne nextcomp
+	lda COMPCNT+1
+	cmp #(COMP_COUNT >> 8)
+	bne nextcomp
+	bra end
+nextcomp:
+	jmp calc_component
 
 
 end:
