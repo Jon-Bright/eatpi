@@ -497,3 +497,30 @@ cmpgeend:
 	pla
 
 	rts
+
+
+cmpgt:
+	;; Compare A > B. C flag will be set on return iff A > B
+	pha
+	phy
+
+	dey			; If we started with e.g. 8 byte length, we want to look at byte 7.
+cmpgtl:
+	lda (A),y
+	cmp (B),y
+	bcc cmpgtend 		; If carry is clear, A < B, we're done, exit
+	bne cmpgtend		; If _zero_ is clear, A != B, but we know it's not less, so it must be
+				; more, so we're also done, A is definitely > B
+	;; OK, we need to proceed to a lower-order byte
+	dey
+	bpl cmpgtl
+	;; If we get here, there were no more bytes to look at. We didn't find any bytes that were less,
+	;; nor any bytes that were more, therefore the numbers are equal. Clear the carry flag and
+	;; fall through
+	clc
+
+cmpgtend:
+	ply			; These don't affect carry
+	pla
+
+	rts

@@ -680,7 +680,7 @@ test13:
 	jsr lcd_char_out
 	lda #'3'
 	jsr lcd_char_out
-	
+
 	lda #(num9 & $ff)
 	sta A
 	lda #(num9 >> 8)
@@ -714,13 +714,109 @@ test13:
 	bcc test14
 	jmp err_num_out
 
-	;; Our work here is done
+
+	;; Test 14, compare num7 > num7, expect carry clear
 test14:
+	jsr lcd_home
+	lda #'1'
+	jsr lcd_char_out
+	lda #'4'
+	jsr lcd_char_out
+
+	lda #(num7 & $ff)
+	sta A
+	lda #(num7 >> 8)
+	sta A_
+
+	lda #(num7 & $ff)
+	sta B
+	lda #(num7 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr cmpgt
+
+	bcc test15
+	jmp err_num_out
+
+
+	;; Test 15, compare num7 > num8, expect carry clear
+test15:
+	jsr lcd_home
+	lda #'1'
+	jsr lcd_char_out
+	lda #'5'
+	jsr lcd_char_out
+
+	lda #(num7 & $ff)
+	sta A
+	lda #(num7 >> 8)
+	sta A_
+
+	lda #(num8 & $ff)
+	sta B
+	lda #(num8 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr cmpgt
+
+	bcc test16
+	jmp err_num_out
+
+
+	;; Test 16, compare num8 > num7, expect carry set
+test16:
+	jsr lcd_home
+	lda #'1'
+	jsr lcd_char_out
+	lda #'6'
+	jsr lcd_char_out
+
+	lda #(num8 & $ff)
+	sta A
+	lda #(num8 >> 8)
+	sta A_
+
+	lda #(num7 & $ff)
+	sta B
+	lda #(num7 >> 8)
+	sta B_
+
+	lda #(RES & $ff)
+	sta R
+	lda #(RES >> 8)
+	sta R_
+
+	ldy #4
+
+	jsr cmpgt
+
+	bcs test17
+	jmp err_num_out
+
+
+
+	;; Our work here is done
+test17:
 	lda #(msg_ok & $ff)
 	sta $20
 	lda #(msg_ok >> 8)
 	sta $21
 	jsr lcd_print
+
 
 loop:
 	jmp loop
