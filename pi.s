@@ -1,4 +1,4 @@
-	DIGIT_PREC = 10
+	DIGIT_PREC = 17
 	WORD_PREC = DIGIT_PREC * 104 / 1000 + 2
 	;; For 10: 10 * 104 / 1000 + 2 =1040 / 1000 + 2 = 1 + 2 =3
 	;; For 1000: 1000 * 104 / 1000 + 2 =104000 / 1000 + 2 =104 + 2 =106
@@ -13,6 +13,7 @@
 	PI_PART = $1000		; Start of a series of 32-bit values, WORD_PREC long
 				; Lower-order byte of this must be zero for our clear loop to work
 
+	OUTBUF  = $70
 	P2 	= $80		; int32
 	FIRSTNZ = $84		; int32
 	DIG	= $88		; uint32
@@ -28,7 +29,7 @@
 	PITEMP0	= $E8		; uint32
 	PITEMP1	= $EC		; uint32
 	PITEMP2	= $F0		; uint64
-	PITEMP3	= $F8		; uint64
+	PITEMP3 = $F8		; uint64
 
 #include "call.s"		; Gives us A/B/R definitions
 
@@ -621,8 +622,6 @@ fnzdivloop:
 	ldy #4
 	jsr copy
 
-	;; 	jsr pause
-
 	;; sumOvl = (int32_t)(resSum>>32);
 	lda A
 	clc			; We only want to add 4, thanks.
@@ -650,10 +649,156 @@ checkcc:
 	lda COMPCNT+1
 	cmp #(COMP_COUNT >> 8)
 	bne nextcomp
-	bra end
+	bra calc_done
 nextcomp:
 	jmp calc_component
 
+calc_done:
+	nop
+
+	;; We're ready to print results.
+	;; Component zero is a special case, handle that first.
+	ldx #0
+	jsr calc_sum_addr	; Get the right address for the component in x into PITEMP0[0,1]
+	ldy #0
+	lda (PITEMP0),y
+	clc
+	adc #'0'
+	jsr lcd_char_out
+	lda #'.'
+	jsr lcd_char_out
+
+	;; We'll re-use COMPCNT to count down digits
+	ldx #(DIGIT_PREC & $ff)
+	stx COMPCNT
+	ldx #(DIGIT_PREC >> 8)
+	stx COMPCNT+1
+
+print_outerl:
+	nop
+	ldx #WORD_PREC
+	dex
+
+	lda #0
+	ldy #7
+print_zerol:
+	sta PITEMP2,y
+	sta PITEMP3,y
+	dey
+	bpl print_zerol
+
+print_addl:
+	jsr calc_sum_addr	; Get the right address for the component in x into PITEMP0[0,1]
+	;; We want to use this as a 64-bit value, so copy into PITEMP2
+	ldy #0
+	sty A_
+	sty R_
+	lda (PITEMP0),y
+	sta PITEMP2+0
+	iny
+	lda (PITEMP0),y
+	sta PITEMP2+1
+	iny
+	lda (PITEMP0),y
+	sta PITEMP2+2
+	iny
+	lda (PITEMP0),y
+	sta PITEMP2+3
+
+	lda #(PITEMP2 & $ff)
+	sta A
+	sta R
+	;; A and R now point at PITEMP2, which contains an up-cast copy of our component
+
+	lda #(const_1B & $ff)
+	sta B
+	lda #(const_1B >> 8)
+	sta B_
+
+	ldy #8
+	jsr mul
+
+	;; mul can mess with A/B, reset them
+	lda #0
+	sta A_
+	sta B_
+
+	lda #(PITEMP2 & $ff)
+	sta A
+
+	lda #(PITEMP3 & $ff)
+	sta B
+
+	;; y is still 8 from above
+	jsr add
+
+	;; Bottom 32 bits of PITEMP2 back to the component, top 32 bits put into bottom 32 of PITEMP3
+	ldy #0
+	lda PITEMP2
+	sta (PITEMP0),y
+	iny
+	lda PITEMP2+1
+	sta (PITEMP0),y
+	iny
+	lda PITEMP2+2
+	sta (PITEMP0),y
+	iny
+	lda PITEMP2+3
+	sta (PITEMP0),y
+	lda PITEMP2+4
+	sta PITEMP3+0
+	lda PITEMP2+5
+	sta PITEMP3+1
+	lda PITEMP2+6
+	sta PITEMP3+2
+	lda PITEMP2+7
+	sta PITEMP3+3
+	;; Zero the top 32 bits of PITEMP2. The bottom 32 will be overwritten on the next loop iteration
+	lda #0
+	sta PITEMP2+4
+	sta PITEMP2+5
+	sta PITEMP2+6
+	sta PITEMP2+7
+
+	dex			; On to the next component
+	bne print_addl
+
+	ldx #9			; Max digits to print
+print_digitdivl:
+	;; Ready to print up to 9 digits from the overflow in PITEMP3
+	;; For each digit, we'll divide by 10 and store the remainder (found in DIVREM) in OUTBUF,
+	;; in descending order. We'll then print in ascending order.
+	lda #(PITEMP3)
+	sta A			; A_ is still zero from above
+	sta R
+	lda #(const_10 & $ff)
+	sta B
+	lda #(const_10 >> 8)
+	sta B_
+	ldy #8
+	jsr div
+
+	lda DIVREM
+	clc
+	adc #'0'
+
+	dex
+	sta OUTBUF,x		; Doesn't affect Z
+	bne print_digitdivl
+
+print_digitoutl:
+	lda OUTBUF,x
+	jsr lcd_char_out
+
+	dec COMPCNT
+	bne print_comp_low_only
+	dec COMPCNT+1
+	bmi end
+print_comp_low_only:
+	inx
+	cpx #9
+	bne print_digitoutl
+	jmp print_outerl
 
 end:
 	nop
@@ -783,11 +928,11 @@ calc_sum_noc2:
 	stx PITEMP0		; Why no add? Because PI_PART is guaranteed to start at start-of-page,
 				; so we'd just be adding zero. (If this weren't the case though, we'd
 				; also need to check for carries and increment Y.)
-
 	ply
 	plx
 	pla
 	rts
+
 
 
 #include "lcd.s"
@@ -807,6 +952,10 @@ const_8:
 
 const_10:
 	.byte $0a
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
 	.byte $00
 	.byte $00
 	.byte $00
@@ -874,6 +1023,17 @@ const_2304:
 const_2560:
 	.byte $00
 	.byte $0a
+	.byte $00
+	.byte $00
+
+const_1B:
+	;; 1 billion
+	.byte $00
+	.byte $ca
+	.byte $9a
+	.byte $3b
+	.byte $00
+	.byte $00
 	.byte $00
 	.byte $00
 
