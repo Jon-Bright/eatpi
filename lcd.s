@@ -46,7 +46,7 @@ lcd_print_loop:
 	jmp lcd_print_loop
 lcd_print_ret:
 	rts
-	
+
 lcd_hex:
 	;; Print the LE number pointed to at $0020/1 to the LCD
 	;; y should be set to the number of bytes in the number
@@ -78,7 +78,7 @@ lcd_hex_1add:
 	adc #'0'
 	jsr lcd_char_out
 	rts
-	
+
 lcd_wait:
 	;; Wait for the LCD to be ready for a new command
 	pha            ; Save A for later
